@@ -4,7 +4,7 @@ import pickle
 
 import boto3
 
-from rlkit.launchers.config import LOCAL_LOG_DIR, AWS_S3_PATH
+from rlkit.launchers import config
 import os
 
 PICKLE = 'pickle'
@@ -13,7 +13,7 @@ JOBLIB = 'joblib'
 
 
 def local_path_from_s3_or_local_path(filename):
-    relative_filename = os.path.join(LOCAL_LOG_DIR, filename)
+    relative_filename = os.path.join(config.LOCAL_LOG_DIR, filename)
     if os.path.isfile(filename):
         return filename
     elif os.path.isfile(relative_filename):
@@ -27,7 +27,7 @@ def sync_down(path, check_exists=True):
     if is_docker:
         local_path = "/tmp/%s" % (path)
     else:
-        local_path = "%s/%s" % (LOCAL_LOG_DIR, path)
+        local_path = "%s/%s" % (config.LOCAL_LOG_DIR, path)
 
     if check_exists and os.path.isfile(local_path):
         return local_path
@@ -40,7 +40,7 @@ def sync_down(path, check_exists=True):
         os.environ["AWS_ACCESS_KEY_ID"] = AUTOCONFIG.aws_access_key()
         os.environ["AWS_SECRET_ACCESS_KEY"] = AUTOCONFIG.aws_access_secret()
 
-    full_s3_path = os.path.join(AWS_S3_PATH, path)
+    full_s3_path = os.path.join(config.AWS_S3_PATH, path)
     bucket_name, bucket_relative_path = split_s3_full_path(full_s3_path)
     try:
         bucket = boto3.resource('s3').Bucket(bucket_name)

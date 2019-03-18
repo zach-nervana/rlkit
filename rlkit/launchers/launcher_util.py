@@ -420,6 +420,39 @@ except ImportError:
 
 target_mount = None
 
+def git_infos():
+    try:
+        import git
+        import doodad
+    except ImportError:
+        return None
+
+    doodad_path = osp.abspath(osp.join(
+        osp.dirname(doodad.__file__),
+        os.pardir
+    ))
+    dirs = config.CODE_DIRS_TO_MOUNT + [doodad_path]
+
+    infos = []
+    for directory in dirs:
+        # Idk how to query these things, so I'm just doing try-catch
+        try:
+            repo = git.Repo(directory)
+            try:
+                branch_name = repo.active_branch.name
+            except TypeError:
+                branch_name = '[DETACHED]'
+            infos.append(GitInfo(
+                directory=directory,
+                code_diff=repo.git.diff(None),
+                code_diff_staged=repo.git.diff('--staged'),
+                commit_hash=repo.head.commit.hexsha,
+                branch_name=branch_name,
+            ))
+        except git.exc.InvalidGitRepositoryError:
+            pass
+    return infos
+
 
 def run_experiment(
         method_call,
@@ -539,34 +572,6 @@ def run_experiment(
     variant['exp_prefix'] = str(exp_prefix)
     variant['instance_type'] = str(instance_type)
 
-    try:
-        import git
-        doodad_path = osp.abspath(osp.join(
-            osp.dirname(doodad.__file__),
-            os.pardir
-        ))
-        dirs = config.CODE_DIRS_TO_MOUNT + [doodad_path]
-
-        git_infos = []
-        for directory in dirs:
-            # Idk how to query these things, so I'm just doing try-catch
-            try:
-                repo = git.Repo(directory)
-                try:
-                    branch_name = repo.active_branch.name
-                except TypeError:
-                    branch_name = '[DETACHED]'
-                git_infos.append(GitInfo(
-                    directory=directory,
-                    code_diff=repo.git.diff(None),
-                    code_diff_staged=repo.git.diff('--staged'),
-                    commit_hash=repo.head.commit.hexsha,
-                    branch_name=branch_name,
-                ))
-            except git.exc.InvalidGitRepositoryError:
-                pass
-    except ImportError:
-        git_infos = None
     run_experiment_kwargs = dict(
         exp_prefix=exp_prefix,
         variant=variant,
@@ -575,7 +580,7 @@ def run_experiment(
         use_gpu=use_gpu,
         snapshot_mode=snapshot_mode,
         snapshot_gap=snapshot_gap,
-        git_infos=git_infos,
+        git_infos=git_infos(),
         script_name=main.__file__,
     )
     if mode == 'here_no_doodad':

@@ -1,0 +1,35 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  generateName: $name-job-
+spec:
+  backoffLimit: 1
+  # activeDeadlineSeconds: 100
+  template:
+    metadata:
+      name: $name
+    spec:
+      restartPolicy: OnFailure
+      containers:
+      - name: $name
+        image: $registry/$registry_user/$name
+        command: $command_list
+        # securityContext:
+        #   runAsUser: 11678059 # zdwiel id (try running `id`)
+        #   fsGroup: 17685
+        resources:
+          limits:
+            cpu: "80"
+            memory: 4Gi
+            nvidia.com/gpu: $gpu_count
+        volumeMounts:
+        - mountPath: "/home"
+          name: home
+        envFrom:
+        - configMapRef:
+            name: proxy-config
+      volumes:
+      - name: home
+        nfs:
+          server: pdxcfs10n08b-1.pdx.intel.com
+          path: "/aipg_lab_home_pool_02/$user"

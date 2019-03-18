@@ -42,58 +42,64 @@ RUN mkdir -p /root/.mujoco \
     && wget https://www.roboti.us/download/mjpro150_linux.zip -O mujoco.zip \
     && unzip mujoco.zip -d /root/.mujoco \
     && rm mujoco.zip
-COPY ./mjkey.txt /root/.mujoco/
+COPY mjkey.txt /root/.mujoco/
 ENV LD_LIBRARY_PATH /root/.mujoco/mjpro150/bin:${LD_LIBRARY_PATH}
 ENV LD_LIBRARY_PATH /usr/local/nvidia/lib64:${LD_LIBRARY_PATH}
 
-COPY vendor/Xdummy /usr/local/bin/Xdummy
+COPY environment/docker/vendor/Xdummy /usr/local/bin/Xdummy
 RUN chmod +x /usr/local/bin/Xdummy
 
 # Workaround for https://bugs.launchpad.net/ubuntu/+source/nvidia-graphics-drivers-375/+bug/1674677
-COPY ./vendor/10_nvidia.json /usr/share/glvnd/egl_vendor.d/10_nvidia.json
+COPY environment/docker/vendor/10_nvidia.json /usr/share/glvnd/egl_vendor.d/10_nvidia.json
 
 RUN apt-get update && apt-get install -y libav-tools
 
 # For some reason this works despite an error showing up...
-RUN DEBIAN_FRONTEND=noninteractive apt-get -qy install nvidia-384; exit 0
-ENV LD_LIBRARY_PATH ${LD_LIBRARY_PATH}:/usr/lib/nvidia-384
+# don't install when using kubernetes
+# RUN DEBIAN_FRONTEND=noninteractive apt-get -qy install nvidia-384; exit 0
+# ENV LD_LIBRARY_PATH ${LD_LIBRARY_PATH}:/usr/lib/nvidia-384
 
 RUN mkdir /root/code
 WORKDIR /root/code
 
-WORKDIR /mujoco_py
-
 # For atari-py
+RUN mkdir /usr/lib/nvidia
 RUN apt-get install -y zlib1g-dev swig cmake
 
 # Previous versions installed from a requirements.txt, but direct pip
 # install seems cleaner
-RUN pip install glfw>=1.4.0
-RUN pip install numpy>=1.11
-RUN pip install Cython>=0.27.2
-RUN pip install imageio>=2.1.2
-RUN pip install cffi>=1.10
-RUN pip install imagehash>=3.4
-RUN pip install ipdb
-RUN pip install Pillow>=4.0.0
-RUN pip install pycparser>=2.17.0
-RUN pip install pytest>=3.0.5
-RUN pip install pytest-instafail==0.3.0
-RUN pip install scipy>=0.18.0
-RUN pip install sphinx
-RUN pip install sphinx_rtd_theme
-RUN pip install numpydoc
-RUN pip install cloudpickle==0.5.2
-RUN pip install cached-property==1.3.1
-RUN pip install gym[all]==0.10.5
-RUN pip install gitpython==2.1.7
-RUN pip install gtimer==1.0.0b5
-RUN pip install awscli==1.11.179
-RUN pip install boto3==1.4.8
-RUN pip install ray==0.2.2
-RUN pip install path.py==10.3.1
-RUN pip install http://download.pytorch.org/whl/cu90/torch-0.4.1-cp35-cp35m-linux_x86_64.whl
-RUN pip install joblib==0.9.4
-RUN pip install opencv-python==3.4.0.12
-RUN pip install torchvision==0.2.0
-RUN pip install sk-video==1.1.10
+RUN pip install --no-cache-dir \
+      glfw>=1.4.0 \
+      numpy>=1.11 \
+      Cython>=0.27.2 \
+      imageio>=2.1.2 \
+      cffi>=1.10 \
+      imagehash>=3.4 \
+      ipdb \
+      Pillow>=4.0.0 \
+      pycparser>=2.17.0 \
+      pytest>=3.0.5 \
+      pytest-instafail==0.3.0 \
+      scipy>=0.18.0 \
+      sphinx \
+      sphinx_rtd_theme \
+      numpydoc \
+      cloudpickle==0.5.2 \
+      cached-property==1.3.1 \
+      gym[all]==0.10.5 \
+      gitpython==2.1.7 \
+      gtimer==1.0.0b5 \
+      awscli==1.11.179 \
+      boto3==1.4.8 \
+      ray==0.2.2 \
+      path.py==10.3.1 \
+      http://download.pytorch.org/whl/cu90/torch-0.4.1-cp35-cp35m-linux_x86_64.whl \
+      joblib==0.9.4 \
+      opencv-python==3.4.0.12 \
+      torchvision==0.2.0 \
+      sk-video==1.1.10 \
+      git+https://github.com/vitchyr/multiworld \
+      pygame
+
+COPY . /root/code
+RUN pip install -e .

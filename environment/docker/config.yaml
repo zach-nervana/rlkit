@@ -1,0 +1,9 @@
+name: rlkit
+build_context: ../../..
+registry: amr-registry.caas.intel.com
+registry_user: aipg
+# registry: hub.docker.intel.com
+command: python /root/code/examples/rig/pointmass/rig.py
+kubernetes:
+  gpu_count: 1
+  namespace: zdwiel
