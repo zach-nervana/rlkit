@@ -82,6 +82,12 @@ def build():
         elif "error" in line:
             print(line["error"], flush=True, end="")
             raise ValueError(line["error"])
+        elif "progress" in line:
+            print("\r" + line["progress"], flush=True, end="")
+        elif "status" in line and line["status"] == "Verifying Checksum":
+            pass
+        elif "status" in line and line["status"] == "Download complete":
+            print()
         else:
             print(line, flush=True, end="")
 
@@ -116,7 +122,7 @@ def push():
 
 def make_volume():
     # TODO: should this be remote nfs home or local home?
-    local_experiments = os.path.expanduser("/dataset/experiments")
+    local_experiments = os.path.expanduser("~/experiments")
     experiments_volume = utils.project_config["image_name"]
 
     system("mkdir {local_experiments}".format(**locals()))

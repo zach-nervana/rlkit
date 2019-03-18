@@ -98,7 +98,7 @@ RUN pip install --no-cache-dir \
       opencv-python==3.4.0.12 \
       torchvision==0.2.0 \
       sk-video==1.1.10 \
-      git+https://github.com/vitchyr/multiworld \
+      git+https://github.com/zach-nervana/multiworld.git \
       pygame
 
 COPY . /root/code
